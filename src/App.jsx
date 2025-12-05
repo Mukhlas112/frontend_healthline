@@ -1,63 +1,65 @@
 // src/App.jsx
-import React, { useState, useCallback } from 'react'; // Tambahkan useState dan useCallback
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import Tips from './pages/Tips';
 import Lifestyle from './pages/Lifestyle';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
-import Toast from './components/Toast'; // Import komponen Toast
+
+// Komponen Pembungkus untuk menentukan apakah akan menampilkan Navbar/Footer
+const Layout = ({ children }) => {
+  const location = useLocation();
+  // Tentukan rute di mana Navbar dan Footer TIDAK boleh ditampilkan
+  // Misalnya, untuk halaman Login dan Not Found
+  const noLayout = location.pathname === '/login' || location.pathname === '/404';
+
+  return (
+    <>
+      {/* Jangan tampilkan Navbar untuk halaman login/404 */}
+      {!noLayout && <Navbar />} 
+      
+      <main>
+        {children}
+      </main>
+
+      {/* Jangan tampilkan Footer untuk halaman login/404 */}
+      {!noLayout && <Footer />} 
+    </>
+  );
+};
 
 function App() {
-  const [toast, setToast] = useState({
-    message: '',
-    type: 'info', // success, error, info
-    isVisible: false,
-  });
-
-  // Fungsi yang akan dipanggil untuk menampilkan Toast
-  const showToast = useCallback((message, type = 'info') => {
-    setToast({ message, type, isVisible: true });
-    // Atur toast agar hilang setelah 5 detik
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, isVisible: false }));
-    }, 5000);
-  }, []);
-
-  const closeToast = () => {
-    setToast(prev => ({ ...prev, isVisible: false }));
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Kelola state login
+  
+  // Fungsi untuk menangani proses logout
+  const handleLogout = () => {
+    // Lakukan pembersihan token atau sesi di sini
+    setIsLoggedIn(false);
+    // Setelah logout, arahkan pengguna ke halaman utama atau login
+    // Catatan: Redirect pasca-logout harus dilakukan di komponen yang memicu logout (e.g., Navbar/Login/etc.) 
+    // menggunakan useNavigate() dari react-router-dom.
+    // Untuk App.jsx, kita hanya mengubah state.
   };
 
   return (
     <Router>
-      <div className="bg-gray-50 min-h-screen font-sans">
-        
-        {/* Navbar akan muncul di semua halaman */}
-        <Navbar />
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Home isLoggedIn={isLoggedIn} />} />
+          <Route path="/tips" element={<Tips />} />
+          <Route path="/lifestyle" element={<Lifestyle />} />
+          
+          {/* Tambahkan logika untuk meneruskan state dan fungsi login/logout ke Login */}
+          <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} /> 
 
-        <div className="pt-0"> 
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/tips" element={<Tips />} />
-            <Route path="/lifestyle" element={<Lifestyle />} />
-            {/* Loloskan fungsi showToast sebagai prop ke Login */}
-            <Route path="/login" element={<Login showToast={showToast} />} /> 
-
-            {/* Halaman Error */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-        
-        {/* Render Toast secara global di posisi bottom-left */}
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          isVisible={toast.isVisible} 
-          onClose={closeToast} 
-        />
-        
-      </div>
+          {/* Rute Not Found harus selalu ada sebagai rute terakhir */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Layout>
     </Router>
   );
 }
