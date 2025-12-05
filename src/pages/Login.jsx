@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom'; // PENTING: Import useNavigate dan useLocation
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNotification } from '../contexts/NotificationContext'; // Import hook notifikasi
 
 const Login = () => {
-  // Hooks dari React Router
   const navigate = useNavigate();
   const location = useLocation();
+  const { showToast } = useNotification(); // Panggil hook notifikasi
   
   // Ambil mode dari state, default ke 'login'
   const initialMode = location.state?.mode || 'login';
@@ -14,58 +15,61 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); // Pesan error di dalam form (opsional)
 
-  // Sinkronisasi mode saat state navigasi berubah (dari link Navbar)
+  // Sinkronisasi mode saat state navigasi berubah
   useEffect(() => {
     if (location.state?.mode) {
       setMode(location.state.mode);
-      setError(null); // Bersihkan error saat mode berubah
+      setError(null); 
     }
   }, [location.state?.mode]);
 
-  // Fungsi yang MENSIMULASIKAN proses login
+  // Fungsi yang MENSIMULASIKAN proses login/register
   const handleAuth = (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    // --- LOGIKA SIMULASI AUTENTIKASI ---
+    // --- LOGIKA SIMULASI AUTENTIKASI (Hanya Simulasi) ---
     setTimeout(() => {
       setLoading(false);
 
       if (mode === 'login') {
-        // Logika sederhana: anggap login berhasil jika email dan password terisi
         if (email && password) {
-          // Data yang akan disimpan ke localStorage (harus memiliki username/email)
           const userData = {
             email: email,
-            username: email.split('@')[0], // Contoh sederhana
+            username: email.split('@')[0], 
             token: 'mock-auth-token-123',
           };
 
-          // 1. Simpan data user ke localStorage
+          // Simpan data user ke localStorage
           localStorage.setItem('user', JSON.stringify(userData));
-
-          // 2. PENTING: Memicu event 'storage' agar Navbar.jsx otomatis me-render ulang
           window.dispatchEvent(new Event('storage'));
+          
+          // Tampilkan notifikasi sukses login
+          showToast(`Selamat datang, ${userData.username}!`, 'success'); 
 
-          // 3. Arahkan pengguna ke halaman utama
-          navigate('/');
+          navigate('/'); // Redirect ke halaman utama
 
         } else {
-          setError('Email dan kata sandi harus diisi.');
+          const errMsg = 'Email dan kata sandi harus diisi.';
+          setError(errMsg);
+          showToast(errMsg, 'error'); // Tampilkan notifikasi error
         }
       } else {
-        // Logika sederhana: anggap register berhasil
         if (username && email && password) {
-          setError('Pendaftaran berhasil! Silakan masuk.');
-          setMode('login'); // Ganti ke mode login setelah register
+          const successMsg = 'Pendaftaran berhasil! Silakan masuk.';
+          setError(successMsg); 
+          setMode('login'); 
+          showToast(successMsg, 'success'); // Tampilkan notifikasi sukses register
         } else {
-          setError('Semua kolom harus diisi untuk mendaftar.');
+          const errMsg = 'Semua kolom harus diisi untuk mendaftar.';
+          setError(errMsg);
+          showToast(errMsg, 'error'); // Tampilkan notifikasi error
         }
       }
-    }, 1500); // Simulasi waktu loading
+    }, 1500); 
     // --- AKHIR LOGIKA SIMULASI AUTENTIKASI ---
   };
 
@@ -78,9 +82,9 @@ const Login = () => {
           </h2>
         </div>
         
-        {/* Pesan Error/Sukses */}
-        {error && (
-          <div className={`p-3 text-sm rounded-md ${error.includes('berhasil') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+        {/* Pesan Error/Sukses (Opsional: hanya tampilkan error non-Toast) */}
+        {error && !error.includes('berhasil') && (
+          <div className="p-3 text-sm rounded-md bg-red-100 text-red-700">
             {error}
           </div>
         )}
