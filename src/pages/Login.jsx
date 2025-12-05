@@ -173,7 +173,7 @@ const Login = () => {
             >
               {loading 
                 ? 'Memproses...' 
-                : isLogin ? 'Masuk Sekarang' : 'Daftar Gratis'}
+                : isLogin ? 'Masuk Sekarang' : 'Daftar'}
             </button>
           </form>
 
@@ -215,4 +215,5 @@ const Login = () => {
 };
 
 export default Login;
+
 
