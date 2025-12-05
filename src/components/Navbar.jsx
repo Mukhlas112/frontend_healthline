@@ -1,29 +1,96 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react'; 
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false); // State untuk menu mobile
-  // --- STATE BARU UNTUK LOGIN ---
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // SIMULASI: Ganti ke 'false' di aplikasi nyata
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State untuk dropdown pengguna
   
-  const USERNAME_PLACEHOLDER = "John Doe"; // Placeholder Nama Pengguna
+  // Fungsi utilitas untuk mengambil data user dari localStorage
+  const getUserData = () => {
+    try {
+        const user = localStorage.getItem('user');
+        if (user) {
+            const userData = JSON.parse(user);
+            // Periksa apakah ada data username atau email yang valid
+            if (userData.username || userData.email) {
+                return userData;
+            }
+        }
+        return null;
+    } catch (e) {
+        // Jika parsing JSON gagal, kembalikan null
+        console.error("Error parsing user data from localStorage:", e);
+        return null;
+    }
+  };
+
+  // State inisialisasi dengan data dari localStorage
+  const [user, setUser] = useState(getUserData());
+  const isLoggedIn = !!user; // Status login
+  
+  // Gunakan data username atau email NYATA untuk ditampilkan
+  const USERNAME_DISPLAY = user?.username || user?.email || "Pengguna";
+
+  // State dan Ref untuk Dropdown Pengguna
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); 
+  const dropdownRef = useRef(null); 
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
-  // Fungsi simulasi untuk Logout
+  // LOGIKA 1: Menutup dropdown saat klik di luar
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  
+  // LOGIKA 2: Sinkronisasi Status Login dengan localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      // Perbarui status pengguna saat event storage terjadi (dipicu dari Login.jsx)
+      setUser(getUserData()); 
+    };
+    
+    // Dengarkan perubahan pada window storage
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Inisialisasi status saat mounting (untuk memastikan data terbaru jika ada)
+    setUser(getUserData()); 
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+  // --------------------------------------------------------
+
   const handleLogout = () => {
-    setIsLoggedIn(false); // Set status login menjadi false
-    setIsDropdownOpen(false); // Tutup dropdown
-    // TODO: Tambahkan logika navigasi/API call logout yang sebenarnya di sini
-    console.log("User logged out (Simulated)");
+    localStorage.removeItem('user'); // Hapus data user
+    setUser(null); // Update state lokal
+    window.dispatchEvent(new Event('storage')); // Memicu update di komponen lain (misal: App.jsx)
+    setIsDropdownOpen(false); 
+    toggleMenu(); // Tutup menu mobile (jika terbuka)
+    navigate('/login'); // Arahkan ke halaman login
+  };
+  
+  // Mengambil inisial nama
+  const getInitials = (name) => {
+    if (!name) return 'U'; 
+    // Mengambil huruf pertama dari setiap kata (misal: "Budi Santoso" -> "BS")
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
   // Fungsi untuk menutup menu mobile saat navigasi
   const handleLinkClick = () => {
     toggleMenu();
   };
+
 
   return (
     <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
@@ -51,12 +118,11 @@ const Navbar = () => {
           </div>
 
           {/* === BAGIAN AUTENTIKASI (Desktop) === */}
-          <div className="hidden md:flex items-center space-x-4 relative">
+          <div className="hidden md:flex items-center space-x-4 relative" ref={dropdownRef}> 
             
             {!isLoggedIn ? (
               // Tampilan JIKA BELUM LOGIN
               <>
-                {/* Tombol Masuk */}
                 <Link 
                   to="/login" 
                   state={{ mode: 'login' }} 
@@ -65,7 +131,6 @@ const Navbar = () => {
                   Masuk
                 </Link>
 
-                {/* Tombol Daftar */}
                 <Link 
                   to="/login" 
                   state={{ mode: 'register' }} 
@@ -75,22 +140,24 @@ const Navbar = () => {
                 </Link>
               </>
             ) : (
-              // Tampilan JIKA SUDAH LOGIN
+              // Tampilan JIKA SUDAH LOGIN (Ikon Pengguna & Dropdown)
               <>
                 <button 
                   onClick={toggleDropdown} 
-                  className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100 text-blue-600 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+                  className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100 text-blue-600 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 hover:bg-blue-200"
                   aria-label="User menu"
+                  aria-expanded={isDropdownOpen}
                 >
-                  {/* Ikon Pengguna (menggunakan inisial nama) */}
-                  {USERNAME_PLACEHOLDER.split(' ').map(n => n[0]).join('')} 
+                  {/* Tampilkan Inisial dari data nyata */}
+                  {getInitials(USERNAME_DISPLAY)} 
                 </button>
 
                 {/* Dropdown Menu Pengguna */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl py-1 ring-1 ring-black ring-opacity-5 z-50">
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl py-1 ring-1 ring-black ring-opacity-5 z-50 origin-top-right transition-transform duration-150 ease-out">
                     <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100 font-semibold truncate">
-                      {USERNAME_PLACEHOLDER}
+                      {/* Tampilkan Nama/Email dari data nyata */}
+                      {USERNAME_DISPLAY}
                     </div>
                     <button 
                       onClick={handleLogout} 
@@ -110,6 +177,7 @@ const Navbar = () => {
               onClick={toggleMenu} 
               className="text-gray-600 p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-expanded={isOpen}
+              aria-controls="mobile-menu"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {isOpen ? (
@@ -125,29 +193,17 @@ const Navbar = () => {
       </div>
       
       {/* Konten Menu Mobile (Conditional Rendering) */}
-      <div className={`${isOpen ? 'block' : 'hidden'} md:hidden`}>
+      <div className={`${isOpen ? 'block' : 'hidden'} md:hidden`} id="mobile-menu">
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           
           {/* Menu Links Mobile */}
-          <Link 
-            to="/" 
-            onClick={handleLinkClick} 
-            className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-300"
-          >
+          <Link to="/" onClick={handleLinkClick} className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-300">
             Beranda
           </Link>
-          <Link 
-            to="/tips" 
-            onClick={handleLinkClick} 
-            className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-300"
-          >
+          <Link to="/tips" onClick={handleLinkClick} className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-300">
             Tips Sehat
           </Link>
-          <Link 
-            to="/lifestyle" 
-            onClick={handleLinkClick} 
-            className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-300"
-          >
+          <Link to="/lifestyle" onClick={handleLinkClick} className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-300">
             Lifestyle
           </Link>
 
@@ -177,7 +233,7 @@ const Navbar = () => {
               // Mobile view JIKA SUDAH LOGIN
               <>
                 <div className="px-4 py-2 text-base font-semibold text-gray-800 border-b border-gray-100">
-                  Selamat datang, {USERNAME_PLACEHOLDER}!
+                  Selamat datang, {USERNAME_DISPLAY}!
                 </div>
                 <button 
                   onClick={handleLogout} 
