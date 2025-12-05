@@ -1,4 +1,4 @@
-// src/App.jsx
+// src/App.jsx (Kode yang diperbaiki)
 
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
@@ -11,16 +11,18 @@ import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 
 // Komponen Pembungkus untuk menentukan apakah akan menampilkan Navbar/Footer
-const Layout = ({ children }) => {
+// Sekarang menerima props isLoggedIn dan handleLogout
+const Layout = ({ children, isLoggedIn, onLogout }) => {
   const location = useLocation();
   // Tentukan rute di mana Navbar dan Footer TIDAK boleh ditampilkan
-  // Misalnya, untuk halaman Login dan Not Found
-  const noLayout = location.pathname === '/login' || location.pathname === '/404';
+  // Penting: Pastikan path NotFound sama dengan yang ada di Routes
+  const noLayout = location.pathname === '/login' || location.pathname === '/404'; 
 
   return (
     <>
       {/* Jangan tampilkan Navbar untuk halaman login/404 */}
-      {!noLayout && <Navbar />} 
+      {/* Sekarang Navbar menerima props isLoggedIn dan onLogout */}
+      {!noLayout && <Navbar isLoggedIn={isLoggedIn} onLogout={onLogout} />} 
       
       <main>
         {children}
@@ -33,30 +35,39 @@ const Layout = ({ children }) => {
 };
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Kelola state login
-  
+  // Gunakan localStorage untuk menyimpan status login agar tidak hilang saat refresh
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    const saved = localStorage.getItem('isLoggedIn');
+    return saved === 'true' ? true : false;
+  });
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+    localStorage.setItem('isLoggedIn', 'true');
+  }
+
   // Fungsi untuk menangani proses logout
   const handleLogout = () => {
-    // Lakukan pembersihan token atau sesi di sini
+    // Hapus token dan status dari localStorage
+    localStorage.removeItem('authToken'); 
+    localStorage.setItem('isLoggedIn', 'false');
     setIsLoggedIn(false);
-    // Setelah logout, arahkan pengguna ke halaman utama atau login
-    // Catatan: Redirect pasca-logout harus dilakukan di komponen yang memicu logout (e.g., Navbar/Login/etc.) 
-    // menggunakan useNavigate() dari react-router-dom.
-    // Untuk App.jsx, kita hanya mengubah state.
+    // Redirect ke halaman utama/login akan ditangani di Navbar.jsx
   };
 
   return (
     <Router>
-      <Layout>
+      {/* Teruskan state dan handler ke Layout */}
+      <Layout isLoggedIn={isLoggedIn} onLogout={handleLogout}> 
         <Routes>
-          <Route path="/" element={<Home isLoggedIn={isLoggedIn} />} />
+          <Route path="/" element={<Home />} />
           <Route path="/tips" element={<Tips />} />
           <Route path="/lifestyle" element={<Lifestyle />} />
           
-          {/* Tambahkan logika untuk meneruskan state dan fungsi login/logout ke Login */}
-          <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} /> 
+          {/* Rute Login: Teruskan onLogin */}
+          <Route path="/login" element={<Login onLogin={handleLogin} />} /> 
 
-          {/* Rute Not Found harus selalu ada sebagai rute terakhir */}
+          {/* Rute Not Found: Penting untuk merender halaman 'kosong' jika ada error */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>
