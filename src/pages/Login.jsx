@@ -42,8 +42,8 @@ const Login = () => {
     setLoading(true);
 
     const endpoint = isLogin 
-      ? 'http://localhost:5000/api/users/login' 
-      : 'http://localhost:5000/api/users/register';
+      ? 'https://backend-healthline.vercel.app/api/users/login' 
+      : 'https://backend-healthline.vercel.app/api/users/register';
 
     try {
       const payload = isLogin 
@@ -215,3 +215,4 @@ const Login = () => {
 };
 
 export default Login;
+
