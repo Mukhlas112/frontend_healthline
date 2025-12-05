@@ -1,5 +1,7 @@
+// src/components/Navbar.jsx (Kode Anda)
+
 import React, { useState, useRef, useEffect } from 'react'; 
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -54,7 +56,7 @@ const Navbar = () => {
   // LOGIKA 2: Sinkronisasi Status Login dengan localStorage
   useEffect(() => {
     const handleStorageChange = () => {
-      // Perbarui status pengguna saat event storage terjadi (dipicu dari Login.jsx)
+      // Perbarui status pengguna saat event storage terjadi (dipicu dari Login.jsx atau Logout)
       setUser(getUserData()); 
     };
     
@@ -73,7 +75,7 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem('user'); // Hapus data user
     setUser(null); // Update state lokal
-    window.dispatchEvent(new Event('storage')); // Memicu update di komponen lain (misal: App.jsx)
+    window.dispatchEvent(new Event('storage')); // Memicu update di komponen lain (misal: Komponen Login yang mungkin perlu di-refresh)
     setIsDropdownOpen(false); 
     toggleMenu(); // Tutup menu mobile (jika terbuka)
     navigate('/login'); // Arahkan ke halaman login
