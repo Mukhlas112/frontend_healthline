@@ -3,7 +3,6 @@
 import React from 'react';
 
 const Toast = ({ message, type, isVisible, onClose }) => {
-  // PENTING: Toast sekarang hanya merender jika isVisible=true (dikelola oleh Context)
   if (!isVisible) return null;
 
   // Mendefinisikan gaya berdasarkan tipe notifikasi
