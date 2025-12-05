@@ -1,14 +1,26 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import navigasi
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom'; 
 
 const Login = () => {
-  // Catatan: Saat ini menggunakan alert() untuk notifikasi. 
-  // Untuk aplikasi sungguhan, gunakan komponen modal/toastify yang lebih baik.
-  
   const navigate = useNavigate();
+  const location = useLocation(); 
+  
+  // State Login/Register
+  // Default true (Login), tapi jika tidak ada state. Jika ada state 'register', jadi false.
   const [isLogin, setIsLogin] = useState(true);
 
-  // 1. State untuk menyimpan data input
+  // EFECT BARU: Otomatis ganti mode berdasarkan tombol yang diklik di Navbar
+  useEffect(() => {
+    if (location.state?.mode === 'register') {
+      setIsLogin(false);
+    } else if (location.state?.mode === 'login') {
+      setIsLogin(true);
+    }
+    // Reset form saat mode berubah
+    setFormData({ username: '', email: '', password: '' });
+  }, [location.state]);
+
+  // State Form
   const [formData, setFormData] = useState({
     username: '', 
     email: '',
@@ -17,7 +29,6 @@ const Login = () => {
   
   const [loading, setLoading] = useState(false);
 
-  // 2. Fungsi saat user mengetik
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -25,7 +36,7 @@ const Login = () => {
     });
   };
 
-  // 3. Fungsi saat tombol ditekan (Kirim ke Backend)
+  // Logika Autentikasi (Backend)
   const handleAuth = async (e) => {
     e.preventDefault(); 
     setLoading(true);
@@ -36,8 +47,8 @@ const Login = () => {
 
     try {
       const payload = isLogin 
-        ? { email: formData.email, password: formData.password } // Login hanya butuh email & pass
-        : formData; // Register butuh semua
+        ? { email: formData.email, password: formData.password } 
+        : formData; 
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -51,24 +62,29 @@ const Login = () => {
 
       if (response.ok) {
         if (isLogin) {
-          // LOGIKA SETELAH LOGIN SUKSES
-          // Simpan data user ke localStorage (ini agar user tetap login walau refresh)
-          localStorage.setItem('user', JSON.stringify(data.data)); 
-          alert(`Login Berhasil! Selamat datang ${data.data.username}`);
-          navigate('/'); // Pindah ke Halaman Utama
+          // LOGIKA LOGIN SUKSES
+          // Simpan data user ke localStorage
+          // Pastikan struktur data sesuai dengan respons backend
+          const userData = data.data || data; // Fallback jika data ada di root
+          localStorage.setItem('user', JSON.stringify(userData)); 
+          
+          // Perbaikan: Gunakan optional chaining (?.) dan fallback value
+          const username = userData.username || userData.email || 'Pengguna';
+          alert('Login Berhasil! Selamat datang ${username}');
+          
+          navigate('/'); 
         } else {
-          // LOGIKA SETELAH REGISTER SUKSES
+          // LOGIKA REGISTER SUKSES
           alert('Registrasi Berhasil! Silakan Masuk.');
-          setIsLogin(true); // Pindah ke mode Login
-          setFormData({ username: '', email: '', password: '' }); // Reset form
+          setIsLogin(true); 
+          setFormData({ username: '', email: '', password: '' }); 
         }
       } else {
-        // Gagal (Status 400, 401, 500 dari backend)
-        alert('Gagal: ' + data.message);
+        alert('Gagal: ' + (data.message || 'Terjadi kesalahan'));
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Terjadi kesalahan koneksi ke server. Pastikan Backend Anda berjalan di Port 5000.');
+      alert('Terjadi kesalahan koneksi ke server. Pastikan Backend berjalan.');
     } finally {
       setLoading(false);
     }
@@ -92,10 +108,8 @@ const Login = () => {
             </p>
           </div>
 
-          {/* Form */}
           <form className="space-y-6" onSubmit={handleAuth}>
             
-            {/* Input Nama (Hanya muncul saat Daftar) */}
             {!isLogin && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
@@ -112,7 +126,6 @@ const Login = () => {
               </div>
             )}
 
-            {/* Input Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
               <input 
@@ -127,7 +140,6 @@ const Login = () => {
               />
             </div>
 
-            {/* Input Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <input 
@@ -142,7 +154,6 @@ const Login = () => {
               />
             </div>
 
-            {/* Lupa Password (Hanya saat Login) */}
             {isLogin && (
               <div className="flex justify-end">
                 <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-500">
@@ -151,7 +162,6 @@ const Login = () => {
               </div>
             )}
 
-            {/* Tombol Aksi */}
             <button 
               type="submit" 
               className={`w-full text-white font-bold py-3.5 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all transform hover:-translate-y-0.5 ${
@@ -167,14 +177,13 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Switch Login/Register */}
           <div className="mt-8 text-center">
             <p className="text-gray-600">
               {isLogin ? 'Belum punya akun?' : 'Sudah punya akun?'} 
               <button 
                 onClick={() => {
                   setIsLogin(!isLogin);
-                  setFormData({ username: '', email: '', password: '' }); // Reset form saat ganti mode
+                  setFormData({ username: '', email: '', password: '' });
                 }} 
                 className="ml-2 font-bold text-blue-600 hover:text-blue-500"
                 disabled={loading}
