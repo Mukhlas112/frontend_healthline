@@ -1,6 +1,7 @@
+// src/contexts/NotificationContext.jsx (Diperbaiki)
+
 import React, { createContext, useState, useContext, useCallback } from 'react';
-// Pastikan path ke Toast benar: asumsi Toast ada di src/components
-import Toast from './components/Toast'; 
+import Toast from '../components/Toast'; // Menggunakan komponen Toast yang sudah ada
 
 // 1. Buat Konteks
 const NotificationContext = createContext();
@@ -26,12 +27,13 @@ export const NotificationProvider = ({ children }) => {
   return (
     <NotificationContext.Provider value={{ showToast }}>
       {children}
-      {/* Komponen Toast di render di sini */}
+      {/* Komponen Toast di render di sini, di luar children */}
       {toast.isVisible && (
         <Toast 
           message={toast.message} 
           type={toast.type} 
-          isVisible={toast.isVisible}
+          // FIX KRUSIAL: Tambahkan isVisible={toast.isVisible}
+          isVisible={toast.isVisible} 
           onClose={() => setToast(prev => ({ ...prev, isVisible: false }))} 
         />
       )}
