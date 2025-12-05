@@ -1,40 +1,66 @@
-.navbar {
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1rem 0;
-}
+import React from 'react';
+import { Link } from 'react-router-dom';
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+const Navbar = () => {
+  return (
+    <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          
+          {/* Logo */}
+          <Link to="/" className="flex-shrink-0Ql flex items-center cursor-pointer">
+            <span className="text-2xl font-extrabold text-blue-600 tracking-tight">
+              HealthLine<span className="text-gray-800">.id</span>
+            </span>
+          </Link>
 
-.logo {
-  font-size: 1.5rem; 
-  font-weight: bold;
-  color: #007bff;
-  text-decoration: none;
-}
+          {/* Menu Tengah */}
+          <div className="hidden md:flex space-x-8">
+            <Link to="/" className="text-gray-600 hover:text-blue-600 font-medium transition duration-300">
+              Beranda
+            </Link>
+            <Link to="/tips" className="text-gray-600 hover:text-blue-600 font-medium transition duration-300">
+              Tips Sehat
+            </Link>
+            <Link to="/lifestyle" className="text-gray-600 hover:text-blue-600 font-medium transition duration-300">
+              Lifestyle
+            </Link>
+          </div>
 
-.nav-links {
-  display: flex;
-  gap: 1rem;
-}
+          {/* === BAGIAN YANG DIOPTIMALISASI === */}
+          <div className="hidden md:flex items-center space-x-4">
+            {/* Tombol Masuk: Mengirim state mode 'login' */}
+            <Link 
+              to="/login" 
+              state={{ mode: 'login' }} 
+              className="text-gray-600 hover:text-blue-600 font-medium transition px-4 py-2 rounded-lg hover:bg-blue-50"
+            >
+              Masuk
+            </Link>
 
-.nav-links a {
-  text-decoration: none;
-  color: #333;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: background-color 0.3s;
-}
+            {/* Tombol Daftar: Mengirim state mode 'register' */}
+            <Link 
+              to="/login" 
+              state={{ mode: 'register' }} 
+              className="bg-blue-600 text-white px-5 py-2.5 rounded-full font-semibold shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:shadow-blue-600/50 transition-all duration-300CXCc transform hover:-translate-y-0.5"
+            >
+              Daftar Sekarang
+            </Link>
+          </div>
 
-.nav-links a:hover,
-.nav-links a.active {
-  background-color: #007bff;
-  color: white;
-}
+          {/* Menu Hamburger (Mobile) */}
+          <div className="md:hidden flex items-center">
+            <button className="text-gray-600 focus:outline-none">
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
+              </svg>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;
