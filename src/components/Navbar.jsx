@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // Import Link agar halaman tidak refresh saat diklik
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   return (
@@ -8,7 +8,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           
           {/* Logo */}
-          <Link to="/" className="flex-shrink-0 flex items-center cursor-pointer">
+          <Link to="/" className="flex-shrink-0Ql flex items-center cursor-pointer">
             <span className="text-2xl font-extrabold text-blue-600 tracking-tight">
               HealthLine<span className="text-gray-800">.id</span>
             </span>
@@ -27,12 +27,23 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Tombol Kanan */}
+          {/* === BAGIAN YANG DIOPTIMALISASI === */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/login" className="text-gray-600 hover:text-blue-600 font-medium transition">
+            {/* Tombol Masuk: Mengirim state mode 'login' */}
+            <Link 
+              to="/login" 
+              state={{ mode: 'login' }} 
+              className="text-gray-600 hover:text-blue-600 font-medium transition px-4 py-2 rounded-lg hover:bg-blue-50"
+            >
               Masuk
             </Link>
-            <Link to="/login" className="bg-blue-600 text-white px-5 py-2.5 rounded-full font-semibold shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:shadow-blue-600/50 transition-all duration-300 transform hover:-translate-y-0.5">
+
+            {/* Tombol Daftar: Mengirim state mode 'register' */}
+            <Link 
+              to="/login" 
+              state={{ mode: 'register' }} 
+              className="bg-blue-600 text-white px-5 py-2.5 rounded-full font-semibold shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:shadow-blue-600/50 transition-all duration-300CXCc transform hover:-translate-y-0.5"
+            >
               Daftar Sekarang
             </Link>
           </div>
