@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useNotification } from '../contexts/NotificationContext'; // Import hook notifikasi
+import { Link, useNavigate, useLocation } from 'react-router-dom'; 
+// Perbaiki path: asumsi NotificationContext.jsx ada di root src/
+import { useNotification } from '../NotificationContext'; 
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { showToast } = useNotification(); // Panggil hook notifikasi
+  const { showToast } = useNotification(); 
   
-  // Ambil mode dari state, default ke 'login'
   const initialMode = location.state?.mode || 'login';
 
-  const [mode, setMode] = useState(initialMode); // 'login' atau 'register'
+  const [mode, setMode] = useState(initialMode); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null); // Pesan error di dalam form (opsional)
+  const [error, setError] = useState(null); 
 
-  // Sinkronisasi mode saat state navigasi berubah
   useEffect(() => {
     if (location.state?.mode) {
       setMode(location.state.mode);
@@ -25,13 +24,11 @@ const Login = () => {
     }
   }, [location.state?.mode]);
 
-  // Fungsi yang MENSIMULASIKAN proses login/register
   const handleAuth = (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    // --- LOGIKA SIMULASI AUTENTIKASI (Hanya Simulasi) ---
     setTimeout(() => {
       setLoading(false);
 
@@ -43,14 +40,13 @@ const Login = () => {
             token: 'mock-auth-token-123',
           };
 
-          // Simpan data user ke localStorage
           localStorage.setItem('user', JSON.stringify(userData));
           window.dispatchEvent(new Event('storage'));
           
-          // Tampilkan notifikasi sukses login
+          // PENTING: Tampilkan notifikasi sukses login
           showToast(`Selamat datang, ${userData.username}!`, 'success'); 
 
-          navigate('/'); // Redirect ke halaman utama
+          navigate('/');
 
         } else {
           const errMsg = 'Email dan kata sandi harus diisi.';
@@ -70,7 +66,6 @@ const Login = () => {
         }
       }
     }, 1500); 
-    // --- AKHIR LOGIKA SIMULASI AUTENTIKASI ---
   };
 
   return (
@@ -82,7 +77,7 @@ const Login = () => {
           </h2>
         </div>
         
-        {/* Pesan Error/Sukses (Opsional: hanya tampilkan error non-Toast) */}
+        {/* Pesan Error/Sukses (Dipertahankan di dalam form untuk pesan register) */}
         {error && !error.includes('berhasil') && (
           <div className="p-3 text-sm rounded-md bg-red-100 text-red-700">
             {error}
