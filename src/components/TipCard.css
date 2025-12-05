@@ -1,0 +1,45 @@
+.tip-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tip-card h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.tip-card p {
+  color: #666;
+}
+
+.tip-card button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.tip-card button:hover {
+  background-color: #0056b3;
+}
+
+.tip-card .detail {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+}
+
+.tip-card .detail ul {
+  padding-left: 1.5rem;
+}
+
+.tip-card .detail li {
+  margin-bottom: 0.5rem;
+}
