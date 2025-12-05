@@ -1,230 +1,182 @@
-import React, { useState, useRef, useEffect } from 'react'; 
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; // PENTING: Import useNavigate dan useLocation
 
-const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false); // State untuk menu mobile
+const Login = () => {
+  // Hooks dari React Router
+  const navigate = useNavigate();
+  const location = useLocation();
   
-  // Fungsi utilitas untuk mengambil data user dari localStorage
-  const getUserData = () => {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  };
+  // Ambil mode dari state, default ke 'login'
+  const initialMode = location.state?.mode || 'login';
 
-  const [user, setUser] = useState(getUserData());
-  const isLoggedIn = !!user; // Cek status login
-  const USERNAME_PLACEHOLDER = user?.username || user?.email || "Pengguna";
+  const [mode, setMode] = useState(initialMode); // 'login' atau 'register'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // State dan Ref untuk Dropdown Pengguna
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); 
-  const dropdownRef = useRef(null); // Ref untuk mendeteksi klik di luar area dropdown
-
-  const toggleMenu = () => setIsOpen(!isOpen);
-  const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
-
-  // --- LOGIKA UTAMA: Menutup dropdown saat klik di luar (UX Improvement) ---
+  // Sinkronisasi mode saat state navigasi berubah (dari link Navbar)
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
+    if (location.state?.mode) {
+      setMode(location.state.mode);
+      setError(null); // Bersihkan error saat mode berubah
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-  
-  // --- LOGIKA BARU: Sinkronisasi Status Login dengan localStorage (PENTING) ---
-  useEffect(() => {
-    const handleStorageChange = () => {
-      // Ketika localStorage 'user' berubah (misalnya setelah login/logout di halaman lain)
-      setUser(getUserData()); 
-    };
-    
-    // Tambahkan event listener untuk mendengarkan perubahan pada window storage
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Bersihkan listener saat komponen dilepas
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-  // --------------------------------------------------------
+  }, [location.state?.mode]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user'); // Hapus dari localStorage
-    setUser(null); // Update state (ini akan memicu re-render)
-    // PENTING: Panggil event 'storage' secara manual agar komponen lain (jika ada) ikut terupdate
-    window.dispatchEvent(new Event('storage')); 
-    setIsDropdownOpen(false); 
-  };
-  
-  // Mengambil inisial nama
-  const getInitials = (name) => {
-    if (!name) return 'U'; 
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  };
+  // Fungsi yang MENSIMULASIKAN proses login
+  const handleAuth = (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-  // Fungsi untuk menutup menu mobile saat navigasi
-  const handleLinkClick = () => {
-    toggleMenu();
-  };
+    // --- LOGIKA SIMULASI AUTENTIKASI ---
+    setTimeout(() => {
+      setLoading(false);
 
+      if (mode === 'login') {
+        // Logika sederhana: anggap login berhasil jika email dan password terisi
+        if (email && password) {
+          // Data yang akan disimpan ke localStorage (harus memiliki username/email)
+          const userData = {
+            email: email,
+            username: email.split('@')[0], // Contoh sederhana
+            token: 'mock-auth-token-123',
+          };
+
+          // 1. Simpan data user ke localStorage
+          localStorage.setItem('user', JSON.stringify(userData));
+
+          // 2. PENTING: Memicu event 'storage' agar Navbar.jsx otomatis me-render ulang
+          window.dispatchEvent(new Event('storage'));
+
+          // 3. Arahkan pengguna ke halaman utama
+          navigate('/');
+
+        } else {
+          setError('Email dan kata sandi harus diisi.');
+        }
+      } else {
+        // Logika sederhana: anggap register berhasil
+        if (username && email && password) {
+          setError('Pendaftaran berhasil! Silakan masuk.');
+          setMode('login'); // Ganti ke mode login setelah register
+        } else {
+          setError('Semua kolom harus diisi untuk mendaftar.');
+        }
+      }
+    }, 1500); // Simulasi waktu loading
+    // --- AKHIR LOGIKA SIMULASI AUTENTIKASI ---
+  };
 
   return (
-    <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          
-          {/* Logo */}
-          <Link to="/" className="flex-shrink-0Ql flex items-center cursor-pointer">
-            <span className="text-2xl font-extrabold text-blue-600 tracking-tight">
-              HealthLine<span className="text-gray-800">.id</span>
-            </span>
-          </Link>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-xl shadow-lg">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            {mode === 'login' ? 'Masuk ke Akun Anda' : 'Daftar Akun Baru'}
+          </h2>
+        </div>
+        
+        {/* Pesan Error/Sukses */}
+        {error && (
+          <div className={`p-3 text-sm rounded-md ${error.includes('berhasil') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            {error}
+          </div>
+        )}
 
-          {/* Menu Tengah (Desktop) */}
-          <div className="hidden md:flex space-x-8">
-            <Link to="/" className="text-gray-600 hover:text-blue-600 font-medium transition duration-300">
-              Beranda
-            </Link>
-            <Link to="/tips" className="text-gray-600 hover:text-blue-600 font-medium transition duration-300">
-              Tips Sehat
-            </Link>
-            <Link to="/lifestyle" className="text-gray-600 hover:text-blue-600 font-medium transition duration-300">
-              Lifestyle
-            </Link>
+        <form className="mt-8 space-y-6" onSubmit={handleAuth}>
+          {mode === 'register' && (
+            <div>
+              <label htmlFor="username" className="sr-only">Nama Pengguna</label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                className="appearance-none rounded-md relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Nama Pengguna"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </div>
+          )}
+          <div>
+            <label htmlFor="email" className="sr-only">Alamat Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              className="appearance-none rounded-md relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+              placeholder="Alamat Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="sr-only">Kata Sandi</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              required
+              className="appearance-none rounded-md relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+              placeholder="Kata Sandi"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
 
-          {/* === BAGIAN AUTENTIKASI (Desktop) === */}
-          <div className="hidden md:flex items-center space-x-4 relative" ref={dropdownRef}> 
-            
-            {!isLoggedIn ? (
-              // Tampilan JIKA BELUM LOGIN
-              <>
-                <Link 
-                  to="/login" 
-                  state={{ mode: 'login' }} 
-                  className="text-gray-600 hover:text-blue-600 font-medium transition px-4 py-2 rounded-lg hover:bg-blue-50"
-                >
-                  Masuk
-                </Link>
-
-                <Link 
-                  to="/login" 
-                  state={{ mode: 'register' }} 
-                  className="bg-blue-600 text-white px-5 py-2.5 rounded-full font-semibold shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:shadow-blue-600/50 transition-all duration-300CXCc transform hover:-translate-y-0.5"
-                >
-                  Daftar Sekarang
-                </Link>
-              </>
-            ) : (
-              // Tampilan JIKA SUDAH LOGIN
-              <>
-                <button 
-                  onClick={toggleDropdown} 
-                  className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100 text-blue-600 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
-                  aria-label="User menu"
-                  aria-expanded={isDropdownOpen}
-                >
-                  {getInitials(USERNAME_PLACEHOLDER)} 
-                </button>
-
-                {/* Dropdown Menu Pengguna */}
-                {isDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl py-1 ring-1 ring-black ring-opacity-5 z-50 origin-top-right transition-transform duration-150 ease-out scale-100">
-                    <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100 font-semibold truncate">
-                      {USERNAME_PLACEHOLDER}
-                    </div>
-                    <button 
-                      onClick={handleLogout} 
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition duration-150"
-                    >
-                      Keluar
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Menu Hamburger (Mobile) */}
-          <div className="md:hidden flex items-center">
-            <button 
-              onClick={toggleMenu} 
-              className="text-gray-600 p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              aria-expanded={isOpen}
-              aria-controls="mobile-menu"
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition duration-150"
             >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                {isOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
-                )}
-              </svg>
+              {loading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Memuat...
+                </>
+              ) : (
+                mode === 'login' ? 'Masuk' : 'Daftar'
+              )}
             </button>
           </div>
+        </form>
 
+        <div className="text-center text-sm">
+          {mode === 'login' ? (
+            <p>
+              Belum punya akun?{' '}
+              <button
+                onClick={() => setMode('register')}
+                className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none"
+              >
+                Daftar Sekarang
+              </button>
+            </p>
+          ) : (
+            <p>
+              Sudah punya akun?{' '}
+              <button
+                onClick={() => setMode('login')}
+                className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none"
+              >
+                Masuk
+              </button>
+            </p>
+          )}
         </div>
       </div>
-      
-      {/* Konten Menu Mobile (Conditional Rendering) */}
-      <div className={`${isOpen ? 'block' : 'hidden'} md:hidden`} id="mobile-menu">
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          
-          {/* Menu Links Mobile */}
-          <Link to="/" onClick={handleLinkClick} className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-300">
-            Beranda
-          </Link>
-          <Link to="/tips" onClick={handleLinkClick} className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-300">
-            Tips Sehat
-          </Link>
-          <Link to="/lifestyle" onClick={handleLinkClick} className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-300">
-            Lifestyle
-          </Link>
-
-          {/* Bagian Autentikasi Mobile - Conditional Rendering */}
-          <div className="pt-4 border-t border-gray-100 space-y-2">
-            {!isLoggedIn ? (
-              // Mobile view JIKA BELUM LOGIN
-              <>
-                <Link 
-                  to="/login" 
-                  state={{ mode: 'login' }} 
-                  onClick={handleLinkClick}
-                  className="block w-full text-center px-4 py-2 text-base font-medium text-gray-600 hover:text-blue-600 transition duration-300 rounded-md hover:bg-blue-50"
-                >
-                  Masuk
-                </Link>
-                <Link 
-                  to="/login" 
-                  state={{ mode: 'register' }} 
-                  onClick={handleLinkClick}
-                  className="block w-full text-center px-4 py-2.5 rounded-full font-semibold text-white bg-blue-600 hover:bg-blue-700 transition duration-300 shadow-md shadow-blue-600/30"
-                >
-                  Daftar Sekarang
-                </Link>
-              </>
-            ) : (
-              // Mobile view JIKA SUDAH LOGIN
-              <>
-                <div className="px-4 py-2 text-base font-semibold text-gray-800 border-b border-gray-100">
-                  Selamat datang, {USERNAME_PLACEHOLDER}!
-                </div>
-                <button 
-                  onClick={handleLogout} 
-                  className="block w-full text-center px-4 py-2 text-base font-medium text-white bg-red-500 hover:bg-red-600 transition duration-300 rounded-md"
-                >
-                  Keluar
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </nav>
+    </div>
   );
 };
 
-export default Navbar;
+export default Login;
