@@ -1,13 +1,16 @@
+// Perhatikan impor useNotification
 import React, { useState, useRef, useEffect } from 'react'; 
-import { Link, useNavigate } from 'react-router-dom'; // PENTING: Import useNavigate
-import { useNotification } from '../contexts/NotificationContext'; // Import hook notifikasi
+import { Link, useNavigate } from 'react-router-dom'; 
+// Perbaiki path: asumsi NotificationContext.jsx ada di root src/
+import { useNotification } from '../NotificationContext'; 
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { showToast } = useNotification(); // Panggil hook notifikasi
-  const [isOpen, setIsOpen] = useState(false); // State untuk menu mobile
+  const [isOpen, setIsOpen] = useState(false);
   
   // Fungsi utilitas untuk mengambil data user dari localStorage
+  // ... (getUserData, useState, useEffects)
   const getUserData = () => {
     try {
         const user = localStorage.getItem('user');
@@ -28,14 +31,12 @@ const Navbar = () => {
   const isLoggedIn = !!user;
   const USERNAME_DISPLAY = user?.username || user?.email || "Pengguna";
 
-  // State dan Ref untuk Dropdown Pengguna
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); 
   const dropdownRef = useRef(null); 
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
-  // LOGIKA 1: Menutup dropdown saat klik di luar
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -48,7 +49,6 @@ const Navbar = () => {
     };
   }, []);
   
-  // LOGIKA 2: Sinkronisasi Status Login dengan localStorage
   useEffect(() => {
     const handleStorageChange = () => {
       setUser(getUserData()); 
@@ -64,25 +64,23 @@ const Navbar = () => {
   // --------------------------------------------------------
 
   const handleLogout = () => {
-    localStorage.removeItem('user'); // Hapus data user
-    setUser(null); // Update state lokal
-    window.dispatchEvent(new Event('storage')); // Memicu update di komponen lain
+    localStorage.removeItem('user'); 
+    setUser(null); 
+    window.dispatchEvent(new Event('storage')); 
     setIsDropdownOpen(false); 
     
     // PENTING: Tampilkan notifikasi sukses logout
     showToast('Anda berhasil keluar.', 'success'); 
     
-    setIsOpen(false); // Tutup menu mobile jika terbuka
-    navigate('/login'); // Arahkan ke halaman login
+    setIsOpen(false); 
+    navigate('/login'); 
   };
   
-  // Mengambil inisial nama
   const getInitials = (name) => {
     if (!name) return 'U'; 
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
-  // Fungsi untuk menutup menu mobile saat navigasi
   const handleLinkClick = () => {
     setIsOpen(false);
   };
